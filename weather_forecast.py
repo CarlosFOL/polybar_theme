@@ -10,13 +10,14 @@ STR_REQ = "https://servizos.meteogalicia.gal/apiv4/"
 
 format_response = lambda response : json.loads(response.content.decode())
 
+
 class WeatherForecastService:
     """
     Service offers temperature, wind and precipitation forecasts for the
     next 7 days by calling the METEOGALICIA API.
     """
 
-    def getNumericForecastInfo(coords:str) -> dict:
+    def getNumericForecastInfo(self, coords:str) -> dict:
         """
         Get the temperature, wind and precipitation forescasts from a
         given coordinates (format: "long,lan") for the next 7 days.
@@ -29,7 +30,11 @@ class WeatherForecastService:
             dict
                 Temperatures of the following 7 seven days.
         """
-        str_req = STR_REQ + "getNumericForecastInfo" + f"?API_KEY={API_KEY}"
-        str_req += f"&coords={coords}"
-        response = requests.get(str_req)
+        params = {"API_KEY": API_KEY,
+                  "variables": "temperature",
+                  "coords": coords}
+
+        response = requests.get(STR_REQ + "getNumericForecastInfo",
+                                params=params)
+
         return format_response(response)
