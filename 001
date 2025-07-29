@@ -1,0 +1,65 @@
+#!/bin/bash
+declare -A xresources
+declare -A i3wm
+declare -A polybar
+declare -A dunstrc
+
+xresources['background']='#1E272B'
+xresources['foreground']='#EAD49B'
+xresources['cursorcolor']='#EAD49B'
+xresources['color0']='#1E272B'
+xresources['color8']='#666666'
+xresources['color1']='#685742'
+xresources['color9']='#685743'
+xresources['color2']='#9D6A47'
+xresources['color10']='#9D6A47'
+xresources['color3']='#B36D43'
+xresources['color11']='#B36D43'
+xresources['color4']='#78824B'
+xresources['color12']='#78824B'
+xresources['color5']='#D99F57'
+xresources['color13']='#D99F57'
+xresources['color6']='#C9A554'
+xresources['color14']='#C9A554'
+xresources['color7']='#EAD49B'
+xresources['color15']='#EAD49B'
+xresources['rofi.color-window']='#1E272B, #9D6A47, #9D6A47'
+xresources['rofi.color-normal']='#1E272B, #EAD49B, #1E272B, #1E272B, #78824B'
+xresources['rofi.color-active']='#1E272B, #EAD49B, #1E272B, #1E272B, #78824B'
+xresources['rofi.color-urgent']='#1E272B, #EAD49B, #1E272B, #1E272B, #78824B'
+
+i3wm['client.background']='#1E272B'
+i3wm['client.focused']='#EAD49B #1E272B #EAD49B #9D6A47 #9D6A47'
+i3wm['client.unfocused']='#EAD49B #1E272B #EAD49B #78824B #78824B'
+i3wm['client.focused_inactive']='#EAD49B #1E272B #EAD49B #78824B #78824B'
+i3wm['client.urgent']='#EAD49B #1E272B #EAD49B #78824B #78824B'
+i3wm['client.placeholder']='#EAD49B #1E272B #EAD49B #78824B #78824B'
+
+polybar['background']='#1E272B'
+polybar['foreground']='#EAD49B'
+polybar['modules-left']='i3'
+polybar['modules-center']='date'
+polybar['modules-right']='volume wlan eth powermenu'
+polybar['label-unfocused-background']='#78824b'
+polybar['label-unfocused-foreground']='#1E272B'
+polybar['label-mode-background']='#78824b'
+polybar['label-mode-foreground']='#1E272B'
+polybar['label-focused-foreground']='#6b7443'
+polybar['label-focused-background']='#78824b'
+polybar['label-visible-background']='#78824b'
+polybar['label-visible-foreground']='#1E272B'
+polybar['format-foreground']='#1E272B'
+polybar['format-background']='#d99f57'
+polybar['label-open-foreground']='#9d6a47'
+polybar['label-close-foreground']='#9d6a47'
+polybar['label-separator-foreground']='#9d6a47'
+polybar['format-connected-foreground']='#1E272B'
+polybar['format-connected-background']='#9d6a47'
+polybar['format-connected-prefix-foreground']='#1E272B'
+polybar['ramp-signal-foreground']='#1E272B'
+
+dunstrc['background']=${polybar['background']}
+dunstrc['foreground']=${polybar['format-background']}
+dunstrc['frame_color']=${polybar['format-background']}
+
+wallpaper='001.png'
