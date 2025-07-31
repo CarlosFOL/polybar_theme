@@ -5,7 +5,7 @@ import requests
 
 load_dotenv()
 
-API_KEY= os.getenv("API_KEY")
+API_KEY = os.getenv("API_KEY")
 STR_REQ = "https://servizos.meteogalicia.gal/apiv4/"
 
 format_response = lambda response : json.loads(response.content.decode())
@@ -13,8 +13,16 @@ format_response = lambda response : json.loads(response.content.decode())
 
 class WeatherForecastService:
     """
-    Service offers temperature, wind and precipitation forecasts for the
-    next 7 days by calling the METEOGALICIA API.
+    Handle communication with the MeteoGalicia API to retrieve the 7-day
+    weather data for a specified location.
+
+    This class manages the API requests and uses a data pipeline to process
+    the JSON file containing about the temperature, wind and precipitation
+    forecasts. The data is then returned in a structured format.
+
+    Methods:
+        getWeatherForecasts(coords: str) -> dict
+            Send an API request for the weather data for a specified
     """
 
     def getNumericForecastInfo(self, coords:str) -> dict:
