@@ -42,7 +42,7 @@ class WeatherForecastService:
                 Temperatures of the following 7 seven days.
         """
         params = {"API_KEY": API_KEY,
-                  "variables": "temperature",
+                  "variables": "temperature,wind,precipitation_amount",
                   "coords": coords}
 
         response = requests.get(STR_REQ + "getNumericForecastInfo",
@@ -68,8 +68,10 @@ class WeatherForecastService:
         # Iterate over the variables (temperature, wind and precipitation amount)
         for d in wdata_day:
             for var in d["variables"]:
+                vname = var["name"]
                 for v in var["values"]: # The variable values for each day
                     date, time = format_isodate(v["timeInstant"])
-                    db_wdata.append((var["name"], date, time, v["value"]))
+                    value = v["value"] if vname != "wind" else v["moduleValue"]
+                    db_wdata.append((vname, date, time, value))
 
         return db_wdata
