@@ -8,7 +8,7 @@ load_dotenv()
 API_KEY = os.getenv("API_KEY")
 STR_REQ = "https://servizos.meteogalicia.gal/apiv4/"
 
-format_response = lambda response : json.loads(response.content.decode())
+format_json = lambda response : json.loads(response.content.decode())
 
 
 class WeatherForecastService:
@@ -45,4 +45,12 @@ class WeatherForecastService:
         response = requests.get(STR_REQ + "getNumericForecastInfo",
                                 params=params)
 
-        return format_response(response)
+        response = self._processWeatherData(format_json(response))
+        return response
+
+    def _processWeatherData(self, data: dict):
+        """
+        Process the JSON file containing the temperature, wind, and
+        precipitation forecasts for the next few days.
+        """
+        pass
