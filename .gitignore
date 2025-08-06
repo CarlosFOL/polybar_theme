@@ -2,3 +2,4 @@
 *.pdf
 venv/
 .vscode/
+db/WeatherData

@@ -7,7 +7,7 @@ import requests
 load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
-STR_REQ = "https://servizos.meteogalicia.gal/apiv4/"
+ENTRY_POINT = "https://servizos.meteogalicia.gal/apiv4/"
 
 format_json = lambda response : json.loads(response.content.decode())
 format_isodate = lambda date: (
@@ -26,6 +26,10 @@ class WeatherForecastService:
     Methods:
         getWeatherForecasts(coords: str) -> dict
             Send an API request for the weather data for a specified
+            coordinates.
+
+        processWeatherData(data: dict)
+            Extract the weather data.
     """
 
     def getNumericForecastInfo(self, coords:str) -> dict:
@@ -45,7 +49,7 @@ class WeatherForecastService:
                   "variables": "temperature,wind,precipitation_amount",
                   "coords": coords}
 
-        response = requests.get(STR_REQ + "getNumericForecastInfo",
+        response = requests.get(ENTRY_POINT + "getNumericForecastInfo",
                                 params=params)
 
         response = self._processWeatherData(format_json(response))
