@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS Location;
+DROP TABLE IF EXISTS WeatherVariable;
+DROP TABLE IF EXISTS WeatherObservation;
+
 /*
 Locations:
 Store the geocoding data for the locations found when retrieving my

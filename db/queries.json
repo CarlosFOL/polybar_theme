@@ -1,0 +1,6 @@
+{
+	"WVariable": {
+		"Fill": "INSERT INTO WeatherVariable(name, unit) VALUES (?, ?)"
+	}
+
+}
