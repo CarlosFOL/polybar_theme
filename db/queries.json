@@ -1,6 +1,8 @@
 {
-	"WVariable": {
-		"Fill": "INSERT INTO WeatherVariable(name, unit) VALUES (?, ?)"
+	"Location": {
+		"Fill": "INSERT INTO Location(lat, long, name, country) VALUES (?, ?, ?, ?)"
+	},
+	"WObservations": {
+		"Fill": "INSERT INTO WeatherObservations(date, time, wvariable, wvalue, id_location) VALUES (?, ?, ?, ?, ?)"
 	}
-
 }

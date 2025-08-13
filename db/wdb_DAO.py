@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-# Create the database and the tables within in.
 import json
 import os
 import sqlite3
+
 
 class WeatherDB:
     """
@@ -36,7 +36,11 @@ class WeatherDB:
 
     def _manage_conn(self, close:bool=False):
         """
-        Open connection to the WeatherData DB
+        Open/Close connection to the WeatherData DB
+
+        Args:
+            close: bool
+                Indicate whether or not the connection needs to be closed.
         """
         if close:
             self.conn.close()
@@ -48,6 +52,10 @@ class WeatherDB:
         """Retrieve a specific query.
 
         Specify which SQL query you want to retrieve.
+
+        Args:
+            keys: tuple
+                Keys to navigate into the query JSON file.
         """
         # To work with a nested dictionary
         query = self.queries.get(keys[0])
@@ -61,7 +69,7 @@ class WeatherDB:
         """
         return os.path.exists(self.path + "db/WeatherData")
 
-    def _execute_query(self, sql: str, parameters: tuple = None, read: bool = True):
+    def _execute_query(self, sql_keys: tuple, parameters: tuple = None, read: bool = True):
         """
         Execute a sql query with its corresponding parameters.
 
@@ -73,6 +81,8 @@ class WeatherDB:
             read: bool
                 Indicate wheter it's a read operation.
         """
+        query = self._which_query(keys=sql_keys)
+
         if self.conn is None:
             self._manage_conn()
 
@@ -80,14 +90,14 @@ class WeatherDB:
 
         if parameters is None:
             try:
-                cursor.execute(sql)
+                cursor.execute(query)
             except sqlite3.ProgrammingError: # In case of Multiple Row Insertion
-                cursor.executemany(sql)
+                cursor.executemany(query)
         else:
             try:
-                cursor.execute(sql, parameters)
+                cursor.execute(query, parameters)
             except sqlite3.ProgrammingError:
-                cursor.executemany(sql, parameters)
+                cursor.executemany(query, parameters)
 
         if read:
             results = cursor.fetchall()
@@ -97,21 +107,14 @@ class WeatherDB:
             self.conn.commit()
             return cursor.rowcount  # Number of affected rows
 
-    def _fill_wvariables(self):
-        """
-        Insert the values of the table WeatherVariables by executing
-        the file wvariables.sql.
-        """
-        wvariables = (('temperature', 'degC'),
-                     ('wind', 'kmh_deg'),
-                     ('precipitation', 'lm2'))
-        sql = self._which_query(keys=("WVariable", "Fill"))
-        self._execute_query(sql=sql, parameters=wvariables, read=False)
-
     def create_db(self, force:bool=False):
         """
         Create the WeatherData database schema by executing
         the file tables.sql.
+
+        Args:
+            force: bool
+                To force create the database from scratch.
         """
         if not self.exists() or (self.exists() and force):
             self._manage_conn() # Open connection
@@ -127,13 +130,22 @@ class WeatherDB:
             cursor.executescript(tables)
             self.conn.commit()
 
-            # Fill the table WeatherVariable
-            self._fill_wvariables()
-
             self._manage_conn(close=True)
         else:
             print("WeatherData DB already exists.")
 
 
-    def add_WeatherObservations(self):
-        pass
+    def insert_values(self, table: str, records:list[tuple]):
+        """
+        Perform the "Insert" operation on the table using the provided data.
+
+        Args:
+            table: str
+                Table name
+            records: list[tuple]
+                Data to be inserted into the referenced table.
+        """
+        self._manage_conn()
+        # Insert values
+        self._execute_query(sql_keys=(table, "Fill"), parameters=records)
+        self._manage_conn(close=True)

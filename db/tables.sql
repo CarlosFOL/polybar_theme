@@ -8,7 +8,7 @@ Store the geocoding data for the locations found when retrieving my
 coordinates.
 */
 CREATE TABLE Location(
-    num SERIAL,
+    num INTEGER,
     lat NUMERIC(3, 6) NOT NULL,
 	long NUMERIC(3, 6) NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -30,6 +30,11 @@ CREATE TABLE WeatherVariable(
 
     CONSTRAINT pk_wvar PRIMARY KEY (num)
 );
+
+INSERT INTO WeatherVariable(name, unit) VALUES
+    ('temperature', 'degC'),
+    ('wind', 'kmh_deg'),
+    ('precipitation', 'lm2');
 
 
 CREATE TABLE WeatherObservation(

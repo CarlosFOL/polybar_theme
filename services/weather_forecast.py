@@ -1,20 +1,17 @@
 from datetime import datetime
-from dotenv import load_dotenv
-import json
-import os
+
 import requests
 
-load_dotenv()
+from api_service import ExternalAPIService, format_json
 
-API_KEY = os.getenv("API_KEY")
-ENTRY_POINT = "https://servizos.meteogalicia.gal/apiv4/"
 
-format_json = lambda response : json.loads(response.content.decode())
+ENDPOINT = "https://servizos.meteogalicia.gal/apiv4/"
+
 format_isodate = lambda date: (
     datetime.fromisoformat(date).strftime("%Y-%m-%d %H:%M:%S").split())
 
 
-class WeatherForecastService:
+class WeatherForecastService(ExternalAPIService):
     """
     Handle communication with the MeteoGalicia API to retrieve the 7-day
     weather data for a specified location.
@@ -31,31 +28,11 @@ class WeatherForecastService:
         processWeatherData(data: dict)
             Extract the weather data.
     """
+    def __init__(self, api_key):
+        super().__init__(api_key=api_key, endpoint=ENDPOINT)
 
-    def getNumericForecastInfo(self, coords:str) -> dict:
-        """
-        Get the temperature, wind and precipitation forescasts from a
-        given coordinates (format: "long,lan") for the next 7 days.
 
-        Args:
-            coords: str
-                Coordinates which we want to know the temperature.
-
-        Return
-            dict
-                Temperatures of the following 7 seven days.
-        """
-        params = {"API_KEY": API_KEY,
-                  "variables": "temperature,wind,precipitation_amount",
-                  "coords": coords}
-
-        response = requests.get(ENTRY_POINT + "getNumericForecastInfo",
-                                params=params)
-
-        response = self._processWeatherData(format_json(response))
-        return response
-
-    def _processWeatherData(self, data: dict):
+    def _process_data(self, data: dict) -> list[tuple[str, str, str, float]]:
         """
         Process the JSON file containing the temperature, wind, and
         precipitation forecasts for the next few days.
@@ -79,3 +56,26 @@ class WeatherForecastService:
                     db_wdata.append((vname, date, time, value))
 
         return db_wdata
+
+    def get_data(self, coords:str) -> dict:
+        """
+        Get the temperature, wind and precipitation forescasts from a
+        given coordinates (format: "long,lan") for the next 7 days.
+
+        Args:
+            coords: str
+                Coordinates which we want to know the temperature (long, lan).
+
+        Return
+            dict
+                Temperatures of the following 7 seven days.
+        """
+        params = {"API_KEY": self.api_key,
+                  "variables": "temperature,wind,precipitation_amount",
+                  "coords": coords}
+
+        response = requests.get(self.endpoint + "getNumericForecastInfo",
+                                params=params)
+
+        response = self._process_data(format_json(response))
+        return response
