@@ -27,7 +27,6 @@ class WeatherDB:
         with open(self.path + "db/queries.json", "r") as f:
             queries = f.read()
         self.__queries = json.loads(queries) # SQL statements to use across the methods.
-
         self.conn = None # DB Connection
 
     @property
@@ -67,9 +66,9 @@ class WeatherDB:
         """
         Check if the WeatherData database was created.
         """
-        return os.path.exists(self.path + "db/WeatherData")
+        return os.path.exists(self.path + "WeatherData")
 
-    def _execute_query(self, sql_keys: tuple, parameters: tuple = None, read: bool = True):
+    def execute_query(self, sql_keys: tuple, parameters: tuple = None, read: bool = False):
         """
         Execute a sql query with its corresponding parameters.
 
@@ -133,19 +132,3 @@ class WeatherDB:
             self._manage_conn(close=True)
         else:
             print("WeatherData DB already exists.")
-
-
-    def insert_values(self, table: str, records:list[tuple]):
-        """
-        Perform the "Insert" operation on the table using the provided data.
-
-        Args:
-            table: str
-                Table name
-            records: list[tuple]
-                Data to be inserted into the referenced table.
-        """
-        self._manage_conn()
-        # Insert values
-        self._execute_query(sql_keys=(table, "Fill"), parameters=records)
-        self._manage_conn(close=True)

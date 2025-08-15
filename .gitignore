@@ -2,4 +2,7 @@
 *.pdf
 venv/
 .vscode/
-db/WeatherData
+WeatherData
+test/
+*pycache*
+current_location.json

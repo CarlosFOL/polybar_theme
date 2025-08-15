@@ -2,7 +2,7 @@ from datetime import datetime
 
 import requests
 
-from api_service import ExternalAPIService, format_json
+from .api_service import ExternalAPIService, format_json
 
 
 ENDPOINT = "https://servizos.meteogalicia.gal/apiv4/"
@@ -31,8 +31,7 @@ class WeatherForecastService(ExternalAPIService):
     def __init__(self, api_key):
         super().__init__(api_key=api_key, endpoint=ENDPOINT)
 
-
-    def _process_data(self, data: dict) -> list[tuple[str, str, str, float]]:
+    def _process_data(self, data: dict) -> tuple[list[tuple[str, str, str, float]], str]:
         """
         Process the JSON file containing the temperature, wind, and
         precipitation forecasts for the next few days.
@@ -40,6 +39,10 @@ class WeatherForecastService(ExternalAPIService):
         Args:
             data: dict
                 JSON obtained from the API request.
+
+        Returns:
+            tuple[list[tuple[str, str, str, float]], str]
+                Weather data together to the expire date.
         """
         # The weather data for each day.
         wdata_day: list = data["features"][0]["properties"]["days"]
@@ -48,19 +51,22 @@ class WeatherForecastService(ExternalAPIService):
 
         # Iterate over the variables (temperature, wind and precipitation amount)
         for d in wdata_day:
-            for var in d["variables"]:
-                vname = var["name"]
-                for v in var["values"]: # The variable values for each day
-                    date, time = format_isodate(v["timeInstant"])
-                    value = v["value"] if vname != "wind" else v["moduleValue"]
-                    db_wdata.append((vname, date, time, value))
+            if d["variables"] is not None:
+                for var in d["variables"]:
+                    vname = var["name"]
+                    for v in var["values"]: # The variable values for each day
+                        date, time = format_isodate(v["timeInstant"])
+                        value = v["value"] if vname != "wind" else v["moduleValue"]
+                        db_wdata.append((vname, date, time, value))
 
-        return db_wdata
+        end_date = wdata_day[0]["timePeriod"]["end"]["timeInstant"] # For caching
+
+        return db_wdata, end_date
 
     def get_data(self, coords:str) -> dict:
         """
         Get the temperature, wind and precipitation forescasts from a
-        given coordinates (format: "long,lan") for the next 7 days.
+        given coordinates (format: "long,lat") for the next 7 days.
 
         Args:
             coords: str
@@ -68,7 +74,7 @@ class WeatherForecastService(ExternalAPIService):
 
         Return
             dict
-                Temperatures of the following 7 seven days.
+                Weather data together to expire date.
         """
         params = {"API_KEY": self.api_key,
                   "variables": "temperature,wind,precipitation_amount",
@@ -78,4 +84,15 @@ class WeatherForecastService(ExternalAPIService):
                                 params=params)
 
         response = self._process_data(format_json(response))
-        return response
+        return {"data": response[0], "expires_at": response[1]}
+
+if __name__ == "__main__":
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    api = os.getenv("API_MG")
+    w = WeatherForecastService(api)
+
+    w.get_data('-8.41039,43.36376')

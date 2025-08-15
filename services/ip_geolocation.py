@@ -1,6 +1,6 @@
 import requests
 
-from api_service import ExternalAPIService, format_json
+from .api_service import ExternalAPIService, format_json
 
 
 ENDPOINT = "https://api.ipgeolocation.io/v2/ipgeo"
@@ -17,10 +17,17 @@ class IPGeolocationService(ExternalAPIService):
     def __init__(self, api_key):
         super().__init__(api_key=api_key, endpoint=ENDPOINT)
 
-    def _process_data(self, data: dict) -> list[float, float, str, str]:
+    def _process_data(self, data: dict) -> list:
         """
         Process the JSON file containing the coordinates, name, and
         country data based on the IP address.
+
+        Args:
+            data: dict
+                Response from ipgeolocation API.
+        Returns:
+            list
+                Processed data.
         """
         # Desired variables
         variables = ["latitude", "longitude", "country_name", "city"]
@@ -32,10 +39,14 @@ class IPGeolocationService(ExternalAPIService):
 
         return location_data
 
-    def get_data(self):
+    def get_data(self) -> list:
         """
         Send an API request to IPGeoLocation to obtain location data
         from the detected IP address.
+
+        Returns:
+            list
+                The data of the current location
         """
         response = requests.get(self.endpoint, params={"apiKey": self.api_key} )
         response = self._process_data(format_json(response))
