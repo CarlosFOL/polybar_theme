@@ -6,3 +6,4 @@ WeatherData
 test/
 *pycache*
 current_location.json
+tmp/

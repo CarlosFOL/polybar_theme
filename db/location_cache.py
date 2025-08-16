@@ -62,7 +62,7 @@ class LocationCache:
 
         if cached_data is None:
             return True
-            T
+
         cached_city, cached_country = [cached_data[k] for k in ["city", "country"]]
         has_changed = (current_city != cached_city or
                           current_country != cached_country)
@@ -72,19 +72,23 @@ class LocationCache:
 
         return False
 
-    def save_cache(self, city: str, country: str, expires_at: int):
+    def save_cache(self, coords: list[float, float],
+                   city: str, country: str, expires_at: int):
             """
             Save location data with TTL to cache file.
 
             Args:
+                coords: list[float, float]
+                    New coordinates.
                 city: str
-                    New city
+                    New city.
                 country: str
-                    New country
+                    New country.
                 expires_at: int
                     When the data expires at.
             """
             cache_data = {
+                "coords": coords,
                 'city': city,
                 'country': country,
                 'expires_at': expires_at,

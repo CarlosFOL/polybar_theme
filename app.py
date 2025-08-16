@@ -79,13 +79,13 @@ class WeatherApp:
 
         # 2) Get my current location and compare with cached data
         lat, long, country, city = self.ipLocation.get_data()
-        if self.is_new_location([country, city]):
+        if self.is_new_location([city, country]):
 
             # 3) Update WeatherDB
             expires_at = self.update_db(f"{long},{lat}")
 
             # 4) Write the new location to the cache
-            self.locationCache.save_cache(city, country, expires_at)
+            self.locationCache.save_cache((long, lat), city, country, expires_at)
 
             print("New location was added and the DB was updated!")
 

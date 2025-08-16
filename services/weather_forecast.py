@@ -1,5 +1,8 @@
 from datetime import datetime
+import os
 
+from dotenv import load_dotenv
+import json
 import requests
 
 from .api_service import ExternalAPIService, format_json
@@ -57,13 +60,14 @@ class WeatherForecastService(ExternalAPIService):
                     for v in var["values"]: # The variable values for each day
                         date, time = format_isodate(v["timeInstant"])
                         value = v["value"] if vname != "wind" else v["moduleValue"]
-                        db_wdata.append((vname, date, time, value))
+                        db_wdata.append((date, time, vname, value))
 
-        end_date = wdata_day[0]["timePeriod"]["end"]["timeInstant"] # For caching
+        end_date = db_wdata[-1] # For caching
+        end_date = f"{end_date[0]}T{end_date[1]}"
 
         return db_wdata, end_date
 
-    def get_data(self, coords:str) -> dict:
+    def get_data(self, coords:str, raw: bool = False) -> dict:
         """
         Get the temperature, wind and precipitation forescasts from a
         given coordinates (format: "long,lat") for the next 7 days.
@@ -83,16 +87,21 @@ class WeatherForecastService(ExternalAPIService):
         response = requests.get(self.endpoint + "getNumericForecastInfo",
                                 params=params)
 
-        response = self._process_data(format_json(response))
-        return {"data": response[0], "expires_at": response[1]}
+        if not raw:
+            response = self._process_data(format_json(response))
+            return {"data": response[0], "expires_at": response[1]}
+        else:
+            return format_json(response)
+
 
 if __name__ == "__main__":
-    import os
-    from dotenv import load_dotenv
-
     load_dotenv()
 
     api = os.getenv("API_MG")
-    w = WeatherForecastService(api)
+    wfs = WeatherForecastService(api)
 
-    w.get_data('-8.41039,43.36376')
+    response = wfs.get_data('-8.41039,43.36376')
+
+    # Store JSON with location data
+    with open("../tmp/location_data.json", "w") as f:
+        f.write(json.dumps(response, indent=2))
