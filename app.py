@@ -51,8 +51,7 @@ class WeatherApp:
         wrecords = self.weatherService.get_data(coords) # Weather records
 
         self.weatherDB.execute_query(sql_keys=("WObservation", "Empty"))
-        self.weatherDB.execute_query(sql_keys=("WObservation", "Fill"),
-                                     parameters=wrecords["data"])
+        self.weatherDB.insert_wobservations(data=wrecords["data"])
 
         return wrecords["expires_at"]
 
@@ -88,6 +87,8 @@ class WeatherApp:
             self.locationCache.save_cache((long, lat), city, country, expires_at)
 
             print("New location was added and the DB was updated!")
+        else:
+            print("NO ACTION: The location was not changed, or the weather data didn't expire!")
 
 if __name__ == "__main__":
     app = WeatherApp()

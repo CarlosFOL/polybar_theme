@@ -3,12 +3,14 @@ import os
 
 from dotenv import load_dotenv
 import json
+import pandas as pd
 import requests
 
 from .api_service import ExternalAPIService, format_json
 
 
 ENDPOINT = "https://servizos.meteogalicia.gal/apiv4/"
+WVARIABLES = "temperature,wind,precipitation_amount"
 
 format_isodate = lambda date: (
     datetime.fromisoformat(date).strftime("%Y-%m-%d %H:%M:%S").split())
@@ -34,7 +36,37 @@ class WeatherForecastService(ExternalAPIService):
     def __init__(self, api_key):
         super().__init__(api_key=api_key, endpoint=ENDPOINT)
 
-    def _process_data(self, data: dict) -> tuple[list[tuple[str, str, str, float]], str]:
+
+    def _merge_data(self, data: dict) -> tuple[list[tuple[str, str, float, float, float]]]:
+        """
+        Create a unique table where each row contains the values of the
+        weather variable for each day and time.
+
+        Args:
+            data: dict
+                The data for temperature, wind, and precipitation for
+                each day.
+
+        Returns:
+            tuple[list[tuple[str, str, float, float, float]], str]
+                Weather data in one table
+        """
+        get_cols = lambda wvar: ["date", "time", wvar]
+
+        wvar = WVARIABLES.split(",")
+        df_weather = pd.DataFrame(data[wvar[0]], columns=get_cols(wvar[0]))
+
+        for var in wvar[1:]:
+            wdata = data[var]
+            df_weather = pd.merge(left=df_weather,
+                                  right=pd.DataFrame( wdata, columns=get_cols(var) ),
+                                  on = ["date", "time"]
+                                  )
+
+        return df_weather
+
+
+    def _process_data(self, data: dict) -> tuple[list[tuple[str, str, float, float, float]], str]:
         """
         Process the JSON file containing the temperature, wind, and
         precipitation forecasts for the next few days.
@@ -50,7 +82,7 @@ class WeatherForecastService(ExternalAPIService):
         # The weather data for each day.
         wdata_day: list = data["features"][0]["properties"]["days"]
 
-        db_wdata = [] # Store each record for each day, variable and value.
+        db_wdata = {var:[] for var in WVARIABLES.split(",")} # Store each record for each day, variable and value.
 
         # Iterate over the variables (temperature, wind and precipitation amount)
         for d in wdata_day:
@@ -60,10 +92,14 @@ class WeatherForecastService(ExternalAPIService):
                     for v in var["values"]: # The variable values for each day
                         date, time = format_isodate(v["timeInstant"])
                         value = v["value"] if vname != "wind" else v["moduleValue"]
-                        db_wdata.append((date, time, vname, value))
+                        db_wdata[vname].append((date, time, value))
 
-        end_date = db_wdata[-1] # For caching
+        # For caching. It could be used any wvariable to obtain the end date.
+        end_date = db_wdata["temperature"][-1]
         end_date = f"{end_date[0]}T{end_date[1]}"
+
+        # Combine all the information
+        db_wdata = self._merge_data(db_wdata)
 
         return db_wdata, end_date
 
@@ -81,7 +117,7 @@ class WeatherForecastService(ExternalAPIService):
                 Weather data together to expire date.
         """
         params = {"API_KEY": self.api_key,
-                  "variables": "temperature,wind,precipitation_amount",
+                  "variables": WVARIABLES,
                   "coords": coords}
 
         response = requests.get(self.endpoint + "getNumericForecastInfo",
@@ -99,9 +135,13 @@ if __name__ == "__main__":
 
     api = os.getenv("API_MG")
     wfs = WeatherForecastService(api)
+    raw = False
 
-    response = wfs.get_data('-8.41039,43.36376')
+    response = wfs.get_data('-8.41039,43.36376', raw=raw)
 
-    # Store JSON with location data
-    with open("../tmp/location_data.json", "w") as f:
-        f.write(json.dumps(response, indent=2))
+    if raw:
+        # Store JSON with location data
+        with open("../tmp/location_data.json", "w") as f:
+            f.write(json.dumps(response, indent=2))
+    else:
+        print(response["expires_at"])

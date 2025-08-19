@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
-
 import json
 import os
+import pandas as pd
 import sqlite3
 
 
@@ -132,3 +131,13 @@ class WeatherDB:
             self._manage_conn(close=True)
         else:
             print("WeatherData DB already exists.")
+
+
+    def insert_wobservations(self, data: pd.DataFrame):
+        """
+        Special method to only insert the new data into the
+        WeatherObservation table when either the end date is expired, the location has changed, or the app was initialized for the first time.
+        """
+        self._manage_conn()
+        data.to_sql("WeatherObservation", con=self.conn, if_exists="replace")
+        self._manage_conn(close=True)
