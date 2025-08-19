@@ -2,11 +2,8 @@
 	"Schema": {
 		"Tables": "SELECT name FROM sqlite_master WHERE type='table'"
 	},
-	"Location": {
-		"Fill": "INSERT INTO Location(lat, long, name, country) VALUES (?, ?, ?, ?)"
-	},
 	"WObservation": {
-		"Fill": "INSERT INTO WeatherObservation(date, time, wvariable, wvalue) VALUES (?, ?, ?, ?)",
-		"Empty": "DELETE FROM WeatherObservation"
+		"Empty": "DELETE FROM WeatherObservation",
+		"Get": "SELECT temperature, wind, precipitation_amount FROM WeatherObservation WHERE date = ? AND time = ?"
 	}
 }
