@@ -1,0 +1,10 @@
+#!/usr/bin/zsh
+
+# Position of the weather variable
+POS_VAR=$1
+
+# Get the data in that position
+DATA=$(awk -F ',' "{print \$$POS_VAR}" current_wdata)
+
+# Print it
+echo $DATA

@@ -1,5 +1,6 @@
 #!./venv/bin/python3
 
+from datetime import datetime, time
 import os
 
 from dotenv import load_dotenv
@@ -35,6 +36,18 @@ class WeatherApp:
         self.ipLocation = IPGeolocationService(api_key=API_IP)
         self.locationCache = LocationCache()
 
+    def is_new_location(self, location_data: list) -> bool:
+        """
+        Use the Single IP Geolocation Lookup API from IP Geolocation to
+        obtain data about your current location and compare it to
+        cached data (if exists!).
+
+        Returns:
+            bool
+                Check if it's a new location.
+        """
+        return self.locationCache.is_new_location(location_data)
+
     def update_db(self, coords: str) -> str:
         """
         Make an API request to MeteoGal to obtain the new weather data
@@ -55,17 +68,26 @@ class WeatherApp:
 
         return wrecords["expires_at"]
 
-    def is_new_location(self, location_data: list) -> bool:
+    def update_wdata(self):
         """
-        Use the Single IP Geolocation Lookup API from IP Geolocation to
-        obtain data about your current location and compare it to
-        cached data (if exists!).
+        Get the weather data for the current hour, and write it into a
+        file that can be read from the Polybar config file.
+        """
+        # 1) Get my current datetime.
+        now = datetime.now()
+        date_part = now.date().strftime("%Y-%m-%d")
+        time_part = time(now.hour, 0, 0).strftime("%H:%M:%S")
 
-        Returns:
-            bool
-                Check if it's a new location.
-        """
-        return self.locationCache.is_new_location(location_data)
+        # 2) Use them to retrieve the weather data.
+        db = WeatherDB()
+        wdata: list[tuple[int]] = db.execute_query(sql_keys=("WObservation", "Get"),
+                                                parameters=(date_part, time_part),
+                                                read=True)
+        wdata = ",".join( map(str, wdata[0]) )
+
+        # 3) Store it in a file that will be read by the Polybar config file.
+        with open("current_wdata", 'w') as f:
+            f.write(wdata)
 
     def run(self):
         """
@@ -89,6 +111,10 @@ class WeatherApp:
             print("New location was added and the DB was updated!")
         else:
             print("NO ACTION: The location was not changed, or the weather data didn't expire!")
+
+        # 5) It will retrieve the current weather data.
+        self.update_wdata()
+
 
 if __name__ == "__main__":
     app = WeatherApp()
