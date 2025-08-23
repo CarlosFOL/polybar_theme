@@ -7,3 +7,4 @@ test/
 *pycache*
 current_location.json
 tmp/
+current_wdata

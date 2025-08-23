@@ -1,0 +1,16 @@
+#!/usr/bin/zsh
+
+function change_emoji(){
+	if [ $1 -le 20 ]; then
+		emoji=🪫
+	else
+		emoji=🔋
+	fi
+
+	echo "$emoji : $1%"
+}
+
+battery=$(cat /sys/class/power_supply/BAT0/capacity) 
+change_emoji $battery
+
+
