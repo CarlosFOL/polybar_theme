@@ -36,7 +36,7 @@ class LocationCache:
 
         return None
 
-    def _is_cache_valid(self) -> bool:
+    def is_cache_valid(self) -> bool:
         """
         Check if cached data is still within TTL period.
 
@@ -44,6 +44,7 @@ class LocationCache:
         cached_data = self.load_cache()
 
         expires_at = datetime.fromisoformat(cached_data['expires_at'])
+
         return datetime.now() < expires_at
 
     def is_new_location(self, new_location:list[str, str]) -> bool:
@@ -67,10 +68,7 @@ class LocationCache:
         has_changed = (current_city != cached_city or
                           current_country != cached_country)
 
-        if has_changed or not self._is_cache_valid():
-            return True
-
-        return False
+        return has_changed
 
     def save_cache(self, coords: list[float, float],
                    city: str, country: str, expires_at: int):

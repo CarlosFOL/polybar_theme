@@ -36,17 +36,19 @@ class WeatherApp:
         self.ipLocation = IPGeolocationService(api_key=API_IP)
         self.locationCache = LocationCache()
 
-    def is_new_location(self, location_data: list) -> bool:
+    def needs_update(self, location_data: list) -> bool:
         """
         Use the Single IP Geolocation Lookup API from IP Geolocation to
         obtain data about your current location and compare it to
-        cached data (if exists!).
+        cached data (if exists!). Then, if the location has not changed,
+        it chekcs if the data is valid or not to perform an update.
 
         Returns:
             bool
                 Check if it's a new location.
         """
-        return self.locationCache.is_new_location(location_data)
+        return (self.locationCache.is_new_location(location_data) or
+                not self.locationCache.is_cache_valid())
 
     def update_db(self, coords: str) -> str:
         """
@@ -100,7 +102,7 @@ class WeatherApp:
 
         # 2) Get my current location and compare with cached data
         lat, long, country, city = self.ipLocation.get_data()
-        if self.is_new_location([city, country]):
+        if self.needs_update([city, country]):
 
             # 3) Update WeatherDB
             expires_at = self.update_db(f"{long},{lat}")
@@ -108,7 +110,7 @@ class WeatherApp:
             # 4) Write the new location to the cache
             self.locationCache.save_cache((long, lat), city, country, expires_at)
 
-            print("New location was added and the DB was updated!")
+            print("The location has changed and/or the data has expired. Updating DB...")
         else:
             print("NO ACTION: The location was not changed, or the weather data didn't expire!")
 

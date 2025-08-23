@@ -1,10 +1,21 @@
 #!/usr/bin/zsh
 
-# Position of the weather variable
-POS_VAR=$1
+# Create the text to display the weather data
 
-# Get the data in that position
-DATA=$(awk -F ',' "{print \$$POS_VAR}" current_wdata)
+wvars_emojis=(🌡️ 💨 🌧️)
+units=("°C" "kmh" "lm2")
 
-# Print it
-echo $DATA
+text=""
+
+for i in {1..3}; do
+	wdata=$(awk -F ',' "{print \$${i}}" /home/carlosfol/Desktop/Git_Projects/polybar_theme/current_wdata)
+	text+="${wvars_emojis[i]} ${wdata} ${units[i]}"
+
+	if [ "${i}" -lt 3 ]; then
+		text+=" | "
+	fi
+done
+
+echo "${text}"
+
+
