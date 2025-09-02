@@ -108,4 +108,4 @@ Replace `your_wallpaper.png` with the path to your preferred wallpaper image.
 
 This project is a customization of the excellent work by `stav121`. The original theme can be found at:
 
-* **Original Project:** `https://github.com/stav121/i3wm-themer`
+* **Original Project:** [URL](https://github.com/stav121/i3wm-themer)
