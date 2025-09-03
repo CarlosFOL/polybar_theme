@@ -15,6 +15,9 @@ load_dotenv()
 API_METEO = os.getenv("API_MG")
 API_IP = os.getenv("API_IP")
 
+# Current datetime
+NOW = datetime.now()
+
 
 class WeatherApp:
     """
@@ -63,7 +66,8 @@ class WeatherApp:
             str
                 Weather data expire date.
         """
-        wrecords = self.weatherService.get_data(coords) # Weather records
+        start_time = NOW.strftime("%Y-%m-%dT%H:00:00")
+        wrecords = self.weatherService.get_data(coords, start_time) # Weather records
 
         self.weatherDB.execute_query(sql_keys=("WObservation", "Empty"))
         self.weatherDB.insert_wobservations(data=wrecords["data"])
@@ -76,9 +80,8 @@ class WeatherApp:
         file that can be read from the Polybar config file.
         """
         # 1) Get my current datetime.
-        now = datetime.now()
-        date_part = now.date().strftime("%Y-%m-%d")
-        time_part = time(now.hour, 0, 0).strftime("%H:%M:%S")
+        date_part = NOW.date().strftime("%Y-%m-%d")
+        time_part = time(NOW.hour, 0, 0).strftime("%H:%M:%S")
 
         # 2) Use them to retrieve the weather data.
         db = WeatherDB()

@@ -67,9 +67,6 @@ echo 'API_IP="your_ip_geolocation_api_key"' >> .env
 
 ### 4. Run the Installer
 
-> [!NOTE]
-> The install.sh script is currently being tested in a virtual machine and has not been uploaded yet.
-
 ```bash
 ./install.sh
 ```

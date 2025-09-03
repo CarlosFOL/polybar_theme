@@ -103,7 +103,7 @@ class WeatherForecastService(ExternalAPIService):
 
         return db_wdata, end_date
 
-    def get_data(self, coords:str, raw: bool = False) -> dict:
+    def get_data(self, coords:str, start_time: str, raw: bool = False) -> dict:
         """
         Get the temperature, wind and precipitation forescasts from a
         given coordinates (format: "long,lat") for the next 7 days.
@@ -111,6 +111,8 @@ class WeatherForecastService(ExternalAPIService):
         Args:
             coords: str
                 Coordinates which we want to know the temperature (long, lan).
+            start_time: str
+                From that moment on, the data is recovered.
 
         Return
             dict
@@ -118,7 +120,8 @@ class WeatherForecastService(ExternalAPIService):
         """
         params = {"API_KEY": self.api_key,
                   "variables": WVARIABLES,
-                  "coords": coords}
+                  "coords": coords,
+                  "starTime": start_time}
 
         response = requests.get(self.endpoint + "getNumericForecastInfo",
                                 params=params)
