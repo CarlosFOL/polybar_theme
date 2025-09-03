@@ -121,7 +121,7 @@ class WeatherForecastService(ExternalAPIService):
         params = {"API_KEY": self.api_key,
                   "variables": WVARIABLES,
                   "coords": coords,
-                  "starTime": start_time}
+                  "startTime": start_time}
 
         response = requests.get(self.endpoint + "getNumericForecastInfo",
                                 params=params)
