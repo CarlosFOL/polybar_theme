@@ -2,14 +2,13 @@ from datetime import datetime
 import os
 
 from dotenv import load_dotenv
-import json
 import pandas as pd
 import requests
 
-from .api_service import ExternalAPIService, format_json
+from services.api_service import ExternalAPIService, format_json
 
 
-ENDPOINT = "https://servizos.meteogalicia.gal/apiv4/"
+ENDPOINT = "https://servizos.meteogalicia.gal/apiv5/"
 WVARIABLES = "temperature,wind,precipitation_amount"
 
 format_isodate = lambda date: (
@@ -80,15 +79,16 @@ class WeatherForecastService(ExternalAPIService):
                 Weather data together to the expire date.
         """
         # The weather data for each day.
-        wdata_day: list = data["features"][0]["properties"]["days"]
+        wdata_day: list[dict[list]] = data["features"][0]["properties"]["days"]
 
         db_wdata = {var:[] for var in WVARIABLES.split(",")} # Store each record for each day, variable and value.
 
         # Iterate over the variables (temperature, wind and precipitation amount)
-        for d in wdata_day:
-            if d["variables"] is not None:
-                for var in d["variables"]:
-                    vname = var["name"]
+        for day in wdata_day:
+            entry: list[dict] = day.get("variables")
+            if entry:
+                for var in entry: # var \in [temperature, wind, precipitation_amount]
+                    vname = var["name"] # variable name
                     for v in var["values"]: # The variable values for each day
                         date, time = format_isodate(v["timeInstant"])
                         value = v["value"] if vname != "wind" else v["moduleValue"]
@@ -103,7 +103,7 @@ class WeatherForecastService(ExternalAPIService):
 
         return db_wdata, end_date
 
-    def get_data(self, coords:str, start_time: str, raw: bool = False) -> dict:
+    def get_data(self, coords:str, start_time: str) -> dict:
         """
         Get the temperature, wind and precipitation forescasts from a
         given coordinates (format: "long,lat") for the next 7 days.
@@ -126,11 +126,8 @@ class WeatherForecastService(ExternalAPIService):
         response = requests.get(self.endpoint + "getNumericForecastInfo",
                                 params=params)
 
-        if not raw:
-            response = self._process_data(format_json(response))
-            return {"data": response[0], "expires_at": response[1]}
-        else:
-            return format_json(response)
+        response = self._process_data(format_json(response))
+        return {"data": response[0], "expires_at": response[1]}
 
 
 if __name__ == "__main__":
@@ -138,13 +135,10 @@ if __name__ == "__main__":
 
     api = os.getenv("API_MG")
     wfs = WeatherForecastService(api)
-    raw = False
+    start_time = datetime.now().strftime("%Y-%m-%dT%H:00:00")
 
-    response = wfs.get_data('-8.41039,43.36376', raw=raw)
+    response = wfs.get_data('-8.41039,43.36376', start_time=start_time)
 
-    if raw:
-        # Store JSON with location data
-        with open("../tmp/location_data.json", "w") as f:
-            f.write(json.dumps(response, indent=2))
-    else:
-        print(response["expires_at"])
+    # Process data
+    db_wdata, end_date = wfs._process_data(response)
+    print(db_wdata)
